@@ -248,15 +248,20 @@ class ResonanceTestExecutor:
             toolhead.set_max_velocities(None, old_max_accel, None, None)
             toolhead.move([X + decel_X, Y + decel_Y, Z + decel_Z] + tpos[3:],
                           abs(last_v))
+        # Ensure vibration moves come to a complete standstill and buffer drains
+        toolhead.dwell(0.250)
+        toolhead.wait_moves()
+        toolhead.set_position(toolhead.get_position())
         # Restore the original acceleration values
         self.gcode.run_script_from_command(
             ("SET_VELOCITY_LIMIT VELOCITY=%.3f ACCEL=%.3f"
              + " MINIMUM_CRUISE_RATIO=%.3f") % (old_max_velocity, old_max_accel,
                                                 old_minimum_cruise_ratio))
-        # Restore input shaper if it was disabled for resonance testing
-        if input_shaper is not None:
-            input_shaper.enable_shaping()
-            gcmd.respond_info("Re-enabled [input_shaper]")
+        # Note: On IDEX kinematics, do not re-enable input shaper here at the tail
+        # of the vibration test. Re-enabling shaper right after high-frequency
+        # vibrations causes the shaper filter to convolve backwards into unshaped
+        # moves, triggering stepcompress interval=0 sequence errors on inactive carriages.
+        # Input shaper will be restored cleanly at rest by IDEX macros / toolchange.
 
 class ResonanceTester:
     def __init__(self, config):
