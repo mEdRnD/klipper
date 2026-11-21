@@ -115,7 +115,9 @@ class ToolsCalibrate:
         toolhead.manual_move([None, None, downPos[2] + self.lift_z],
                              self.lift_speed)
         toolhead.manual_move([center_x, center_y, None], self.travel_speed)
-        center_z = self.probe_multi_axis.run_probe("z-", gcmd, speed_ratio=0.5, samples=1)[
+        # Use the configured samples (median + tolerance retries): a single
+        # sample here let one early trigger shift the final Z by 0.14 mm
+        center_z = self.probe_multi_axis.run_probe("z-", gcmd, speed_ratio=0.5)[
             2]
         # Now redo X and Y, since we have a more accurate center.
         center_x, center_y = self.calibrate_xy(toolhead,
