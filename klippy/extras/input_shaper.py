@@ -132,10 +132,11 @@ class InputShaper:
             return sk
         ffi_main, ffi_lib = chelper.get_ffi()
         is_sk = ffi_main.gc(ffi_lib.input_shaper_alloc(), ffi_lib.free)
+        stepper.set_stepper_kinematics(is_sk)
         res = ffi_lib.input_shaper_set_sk(is_sk, sk)
         if res < 0:
+            stepper.set_stepper_kinematics(sk)
             return None
-        stepper.set_stepper_kinematics(is_sk)
         self.orig_stepper_kinematics.append(sk)
         self.input_shaper_stepper_kinematics.append(is_sk)
         return is_sk
